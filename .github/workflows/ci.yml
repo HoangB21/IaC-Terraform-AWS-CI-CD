@@ -21,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # lấy đủ history
+          fetch-depth: 0   
       
       - name: Fetch develop & staging
         run: |
@@ -31,9 +31,18 @@ jobs:
       - name: Find changed directories
         id: changed-dirs
         run: |
-          CHANGED_DIRS=$(git diff --name-only origin/staging origin/develop \
+          CHANGED_FILES=$(git diff --name-only origin/staging origin/develop)
+      
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+      
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
             | grep '^environments/' \
-            | cut -d/ -f1-4 | sort -u)
+            | xargs -n1 dirname | sort -u)
+      
+          echo "Changed dirs:"
+          echo "$CHANGED_DIRS"
+      
           echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
