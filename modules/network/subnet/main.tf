@@ -6,7 +6,7 @@ resource "aws_subnet" "this" {
 
   tags = merge(
     {
-      Name = "${var.subnet_name}-${var.is_public ? "public" : "private"}"
+      Name = var.subnet_name
     },
     var.tags
   )
@@ -18,7 +18,7 @@ resource "aws_route_table" "this" {
 
   tags = merge(
     {
-      Name = "${var.subnet_name}-rt-${var.is_public ? "public" : "private"}"
+      Name = "${var.subnet_name}-rt}"
     },
     var.tags
   )

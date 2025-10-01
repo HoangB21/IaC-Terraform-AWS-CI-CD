@@ -62,8 +62,12 @@ jobs:
             terraform validate
             terraform plan -input=false -no-color -out=tfplan || true
             terraform show -no-color tfplan > plan.txt
-            PLAN=$(cat plan.txt)
-            RESULT="$RESULT\n\n### $dir\n\`\`\`\n$PLAN\n\`\`\`"
+
+            # Rút gọn: chỉ giữ resource actions, outputs, summary
+            grep -E "^(#|Plan:|Changes to Outputs:|\s+\+|\s+~|\s+-)" plan.txt > plan_short.txt || true
+
+            SHORT_PLAN=$(cat plan_short.txt)
+            RESULT="$RESULT\n\n### $dir\n\`\`\`\n$SHORT_PLAN\n\`\`\`"
             cd - >/dev/null
           done
           echo "result<<EOF" >> $GITHUB_OUTPUT
