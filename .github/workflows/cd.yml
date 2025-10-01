@@ -64,7 +64,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            Terraform Apply Output:
-            ${{ steps.tf.outputs.stdout }}
+            ## Terraform Apply Result
+            ${{ steps.tf.outputs.result }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.pull_request.number }}
