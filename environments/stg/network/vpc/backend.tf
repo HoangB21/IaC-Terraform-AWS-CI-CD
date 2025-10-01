@@ -4,5 +4,6 @@ terraform {
     key          = "stg/network/vpc/terraform.tfstate"
     region       = "ap-southeast-2"
     use_lockfile = true
+
   }
 }
