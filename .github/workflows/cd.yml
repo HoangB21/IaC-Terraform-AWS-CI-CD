@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   pull-requests: write   # để comment vào PR
-  issues: write          # dự phòng nếu dùng issues API
+  issues: write          # phòng khi cần dùng issues API
 
 jobs:
   terraform-cd:
@@ -21,13 +21,29 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # cần full history để diff
 
       - name: Find changed directories
         id: changed-dirs
         run: |
-          CHANGED_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | \
-            grep '^environments/' | cut -d/ -f1-4 | sort -u)
-          echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
+            | grep '^environments/' \
+            | xargs -n1 dirname | sort -u || true)
+
+          echo "Changed dirs (multiline):"
+          echo "$CHANGED_DIRS"
+
+          CHANGED_DIRS_SINGLE_LINE=$(echo $CHANGED_DIRS)
+
+          echo "Changed dirs (single line):"
+          echo "$CHANGED_DIRS_SINGLE_LINE"
+
+          echo "dirs=$CHANGED_DIRS_SINGLE_LINE" >> $GITHUB_OUTPUT
 
       - name: Terraform Apply
         id: tf
@@ -35,16 +51,32 @@ jobs:
           RESULT=""
           for dir in ${{ steps.changed-dirs.outputs.dirs }}; do
             echo "---- Running in $dir ----"
-            cd $dir
-            terraform init -input=false
+            cd "$dir"
+            terraform init -input=false -backend-config="use_lockfile=true"
             terraform apply -auto-approve -input=false -no-color
             OUT=$(terraform output -json || echo "No outputs")
             RESULT="$RESULT\n\n### $dir\n\`\`\`\n$OUT\n\`\`\`"
             cd - >/dev/null
           done
+
+          # xuất output để dùng ở step sau
           echo "result<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RESULT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          # lưu kết quả vào file cho summary + artifact
+          echo -e "$RESULT" > ${{ runner.temp }}/terraform-apply-result.md
+
+      - name: Add summary
+        run: |
+          echo "## Terraform Apply Result" >> $GITHUB_STEP_SUMMARY
+          cat ${{ runner.temp }}/terraform-apply-result.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-apply-result
+          path: ${{ runner.temp }}/terraform-apply-result.md
 
       - name: Comment apply result on PR
         if: github.event_name == 'push'
