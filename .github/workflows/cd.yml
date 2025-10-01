@@ -12,8 +12,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write   # để comment vào PR
-  issues: write          # phòng khi cần dùng issues API
+  pull-requests: write   # allow comment on PR
 
 jobs:
   terraform-cd:
@@ -55,16 +54,14 @@ jobs:
             cd - >/dev/null
           done
 
-          # xuất output để dùng ở step sau
           echo "result<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RESULT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Comment Apply Result
-        uses: thollander/actions-comment-pull-request@v2
+      - name: Comment Apply Result on PR
+        uses: marocchino/sticky-pull-request-comment@v2
         with:
+          header: terraform-apply
           message: |
             ## Terraform Apply Result
             ${{ steps.tf.outputs.result }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          pr_number: ${{ github.event.pull_request.number }}
