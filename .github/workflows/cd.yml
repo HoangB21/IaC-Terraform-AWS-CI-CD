@@ -9,17 +9,18 @@ on:
       - 'environments/prd/**'
       - '!modules/**'
 
+permissions:
+  contents: read
+  pull-requests: write   # để comment vào PR
+  issues: write          # dự phòng nếu dùng issues API
+
 jobs:
   terraform-cd:
     runs-on: self-hosted
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.9.8
 
       - name: Find changed directories
         id: changed-dirs
@@ -51,11 +52,25 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `## Terraform Apply Result
-            ${{ steps.tf.outputs.result }}`
-            github.rest.issues.createComment({
-              issue_number: context.payload.head_commit.message.match(/#(\d+)/)?.[1],
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            const { owner, repo } = context.repo;
+            const commitSha = context.sha;
+
+            // Tìm PR đã merge chứa commit vừa push
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner,
+              repo,
+              commit_sha: commitSha,
+            });
+
+            if (prs.data.length === 0) {
+              core.warning("No PR found for this commit, skipping comment.");
+            } else {
+              const prNumber = prs.data[0].number;
+              const output = `## Terraform Apply Result\n${{ steps.tf.outputs.result }}`;
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: output,
+              });
+            }
