@@ -64,45 +64,11 @@ jobs:
           echo -e "$RESULT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          # lưu kết quả vào file cho summary + artifact
-          echo -e "$RESULT" > ${{ runner.temp }}/terraform-apply-result.md
-
-      - name: Add summary
-        run: |
-          echo "## Terraform Apply Result" >> $GITHUB_STEP_SUMMARY
-          cat ${{ runner.temp }}/terraform-apply-result.md >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - name: Comment Apply Result
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          name: terraform-apply-result
-          path: ${{ runner.temp }}/terraform-apply-result.md
-
-      - name: Comment apply result on PR
-        if: github.event_name == 'push'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { owner, repo } = context.repo;
-            const commitSha = context.sha;
-
-            // Tìm PR đã merge chứa commit vừa push
-            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner,
-              repo,
-              commit_sha: commitSha,
-            });
-
-            if (prs.data.length === 0) {
-              core.warning("No PR found for this commit, skipping comment.");
-            } else {
-              const prNumber = prs.data[0].number;
-              const output = `## Terraform Apply Result\n${{ steps.tf.outputs.result }}`;
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number: prNumber,
-                body: output,
-              });
-            }
+          message: |
+            Terraform Apply Output:
+            ${{ steps.apply.outputs.stdout }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          pr_number: ${{ github.event.pull_request.number }}
