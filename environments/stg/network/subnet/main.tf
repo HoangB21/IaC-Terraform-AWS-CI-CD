@@ -1,5 +1,10 @@
-module "vpc" {
-  source = "../vpc"
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+  config = {
+    bucket = "hoangtong-tf-state"
+    key    = "stg/network/vpc/terraform.tfstate"
+    region = "ap-southeast-2"
+  }
 }
 
 locals {
@@ -15,11 +20,11 @@ module "public_subnet" {
   source            = "../../../../modules/network/subnet"
   count             = 2
   subnet_name       = "stg-public-subnet-${format("%02d", count.index + 1)}"
-  vpc_id            = module.vpc.vpc_id
+  vpc_id            = data.terraform_remote_state.vpc.outputs.vpc_id
   cidr_block        = "10.0.${count.index + 1}.0/24"
   availability_zone = local.azs[count.index]
   is_public         = true
-  igw_id            = module.vpc.igw_id
+  igw_id            = data.terraform_remote_state.vpc.outputs.igw_id
   tags              = local.common_tags
 }
 
@@ -27,10 +32,10 @@ module "private_subnet" {
   source            = "../../../../modules/network/subnet"
   count             = 2
   subnet_name       = "stg-private-subnet-${format("%02d", count.index + 1)}"
-  vpc_id            = module.vpc.vpc_id
+  vpc_id            = data.terraform_remote_state.vpc.outputs.vpc_id
   cidr_block        = "10.0.${count.index + 3}.0/24"
   availability_zone = local.azs[count.index]
   is_public         = false
-  igw_id            = module.vpc.igw_id
+  igw_id            = data.terraform_remote_state.vpc.outputs.igw_id
   tags              = local.common_tags
 }
