@@ -18,19 +18,22 @@ jobs:
   terraform-ci:
     runs-on: self-hosted  # EC2 runner 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
-          terraform_version: 1.9.8
-
+          fetch-depth: 0   # lấy đủ history
+      
+      - name: Fetch develop & staging
+        run: |
+          git fetch origin develop
+          git fetch origin staging
+      
       - name: Find changed directories
         id: changed-dirs
         run: |
-          CHANGED_DIRS=$(git diff --name-only ${{ github.base_ref }} ${{ github.head_ref }} | \
-            grep '^environments/' | cut -d/ -f1-4 | sort -u)
+          CHANGED_DIRS=$(git diff --name-only origin/staging origin/develop \
+            | grep '^environments/' \
+            | cut -d/ -f1-4 | sort -u)
           echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
