@@ -35,7 +35,7 @@ module "private_subnet" {
   count             = local.private_subnet_count
   subnet_name       = "stg-private-subnet-${format("%02d", count.index + 1)}"
   vpc_id            = data.terraform_remote_state.vpc.outputs.vpc_id
-  cidr_block        = "10.${count.index + 1}.0.0/24"
+  cidr_block        = "10.0.${count.index + 128}.0/24"
   availability_zone = local.azs[count.index]
   is_public         = false
   igw_id            = data.terraform_remote_state.vpc.outputs.igw_id
