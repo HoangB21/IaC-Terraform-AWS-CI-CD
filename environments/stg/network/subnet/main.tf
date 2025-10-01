@@ -30,7 +30,7 @@ module "private_subnet" {
   vpc_id            = module.vpc.vpc_id
   cidr_block        = "10.0.${count.index + 3}.0/24"
   availability_zone = local.azs[count.index]
-  is_public         = true
+  is_public         = false
   igw_id            = module.vpc.igw_id
   tags              = local.common_tags
 }
