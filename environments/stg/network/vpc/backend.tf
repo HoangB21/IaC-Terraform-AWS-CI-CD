@@ -3,6 +3,6 @@ terraform {
     bucket       = "hoangtong-tf-state"
     key          = "stg/network/vpc/terraform.tfstate"
     region       = "ap-southeast-2"
-    use_lockfile = true
+    use_lockfile = true # instead of dynamoDB
   }
 }
