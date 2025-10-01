@@ -1,0 +1,79 @@
+# Workflow for CI
+name: Terraform CI
+
+on:
+  pull_request:
+    branches:
+      - staging
+    paths:
+      - 'environments/stg/**'
+      - 'environments/prd/**'
+      - '!modules/**'
+      
+permissions:
+  contents: read
+  pull-requests: write # allow comment on PR
+  
+jobs:
+  terraform-ci:
+    runs-on: self-hosted  # EC2 runner 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Fetch develop & staging
+        run: |
+          git fetch origin develop
+          git fetch origin staging
+      
+      - name: Find changed directories
+        id: changed-dirs
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/staging origin/develop)
+      
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+      
+          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
+            | grep '^environments/' \
+            | xargs -n1 dirname | sort -u || true)
+      
+          echo "Changed dirs (multiline):"
+          echo "$CHANGED_DIRS"
+      
+          CHANGED_DIRS_SINGLE_LINE=$(echo $CHANGED_DIRS)
+      
+          echo "Changed dirs (single line):"
+          echo "$CHANGED_DIRS_SINGLE_LINE"
+      
+          echo "dirs=$CHANGED_DIRS_SINGLE_LINE" >> $GITHUB_OUTPUT
+
+      - name: Terraform Validate + Plan
+        id: tf
+        run: |
+          RESULT=""
+          for dir in ${{ steps.changed-dirs.outputs.dirs }}; do
+            echo "---- Running in $dir ----"
+            cd $dir
+            terraform init -input=false
+            terraform fmt -check
+            terraform validate
+            terraform plan -input=false -no-color -out=tfplan || true
+            terraform show -no-color tfplan > plan.txt
+            PLAN=$(cat plan.txt)
+            RESULT="$RESULT\n\n### $dir\n\`\`\`\n$PLAN\n\`\`\`"
+            cd - >/dev/null
+          done
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$RESULT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment plan on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan
+          message: |
+            ## Terraform Plan Result
+            ${{ steps.tf.outputs.result }}
