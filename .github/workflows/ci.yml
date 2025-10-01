@@ -1,0 +1,58 @@
+# Workflow for CI
+name: Terraform CI
+
+on:
+  pull_request:
+    branches:
+      - staging
+    paths:
+      - 'environments/stg/**'
+      - 'environments/prd/**'
+      - '!modules/**'
+
+jobs:
+  terraform-ci:
+    runs-on: self-hosted  # EC2 runner 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Find changed directories
+        id: changed-dirs
+        run: |
+          CHANGED_DIRS=$(git diff --name-only ${{ github.base_ref }} ${{ github.head_ref }} | \
+            grep '^environments/' | cut -d/ -f1-4 | sort -u)
+          echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
+
+      - name: Terraform Validate + Plan
+        id: tf
+        run: |
+          RESULT=""
+          for dir in ${{ steps.changed-dirs.outputs.dirs }}; do
+            echo "---- Running in $dir ----"
+            cd $dir
+            terraform init -input=false -backend=false
+            terraform fmt -check
+            terraform validate
+            terraform plan -input=false -no-color -out=tfplan || true
+            terraform show -no-color tfplan > plan.txt
+            PLAN=$(cat plan.txt)
+            RESULT="$RESULT\n\n### $dir\n\`\`\`\n$PLAN\n\`\`\`"
+            cd - >/dev/null
+          done
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$RESULT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment plan on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan
+          message: |
+            ## Terraform Plan Result
+            ${{ steps.tf.outputs.result }}
