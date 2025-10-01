@@ -1,7 +1,8 @@
 name: Terraform CD
 
 on:
-  push:
+  pull_request_target:
+    types: [closed]
     branches:
       - staging
     paths:
@@ -22,27 +23,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # cần full history để diff
+          fetch-depth: 0
 
       - name: Find changed directories
         id: changed-dirs
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
           echo "Changed files:"
           echo "$CHANGED_FILES"
-
           CHANGED_DIRS=$(echo "$CHANGED_FILES" \
             | grep '^environments/' \
             | xargs -n1 dirname | sort -u || true)
-
           echo "Changed dirs (multiline):"
           echo "$CHANGED_DIRS"
-
           CHANGED_DIRS_SINGLE_LINE=$(echo $CHANGED_DIRS)
-
           echo "Changed dirs (single line):"
           echo "$CHANGED_DIRS_SINGLE_LINE"
-
           echo "dirs=$CHANGED_DIRS_SINGLE_LINE" >> $GITHUB_OUTPUT
 
       - name: Terraform Apply
@@ -69,6 +65,6 @@ jobs:
         with:
           message: |
             Terraform Apply Output:
-            ${{ steps.apply.outputs.stdout }}
+            ${{ steps.tf.outputs.stdout }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           pr_number: ${{ github.event.pull_request.number }}
