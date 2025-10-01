@@ -38,12 +38,17 @@ jobs:
       
           CHANGED_DIRS=$(echo "$CHANGED_FILES" \
             | grep '^environments/' \
-            | xargs -n1 dirname | sort -u)
+            | xargs -n1 dirname | sort -u || true)
       
-          echo "Changed dirs:"
+          echo "Changed dirs (multiline):"
           echo "$CHANGED_DIRS"
       
-          echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
+          CHANGED_DIRS_SINGLE_LINE=$(echo $CHANGED_DIRS)
+      
+          echo "Changed dirs (single line):"
+          echo "$CHANGED_DIRS_SINGLE_LINE"
+      
+          echo "dirs=$CHANGED_DIRS_SINGLE_LINE" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
         id: tf
