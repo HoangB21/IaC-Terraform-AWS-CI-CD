@@ -9,7 +9,11 @@ on:
       - 'environments/stg/**'
       - 'environments/prd/**'
       - '!modules/**'
-
+      
+permissions:
+  contents: read
+  pull-requests: write # allow comment on PR
+  
 jobs:
   terraform-ci:
     runs-on: self-hosted  # EC2 runner 
