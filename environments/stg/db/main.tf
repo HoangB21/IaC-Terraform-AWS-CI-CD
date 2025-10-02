@@ -23,7 +23,7 @@ module "db" {
   engine                 = "mysql"
   engine_version         = "8.0"
   instance_class         = "db.t3.micro"
-  db_name                = "stg-mysql-db"
+  db_name                = "mysqlDB"
   username               = "admin"
   password               = "root"
   subnet_ids             = data.terraform_remote_state.private_subnets.outputs.private_subnet_ids
