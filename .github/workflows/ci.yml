@@ -63,7 +63,6 @@ jobs:
             terraform plan -input=false -no-color -out=tfplan || true
             terraform show -no-color tfplan > plan.txt
 
-            # Rút gọn: chỉ giữ resource actions, outputs, summary
             grep -E "^(#|Plan:|Changes to Outputs:|\s+\+|\s+~|\s+-)" plan.txt > plan_short.txt || true
 
             SHORT_PLAN=$(cat plan_short.txt)
