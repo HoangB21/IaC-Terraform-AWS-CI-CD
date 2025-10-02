@@ -36,7 +36,7 @@ locals {
 }
 
 module "alb" {
-  source = "../../../modules/app/alb"
+  source = "../../../../modules/app/alb"
 
   # ALB
   name            = "stg-alb"
