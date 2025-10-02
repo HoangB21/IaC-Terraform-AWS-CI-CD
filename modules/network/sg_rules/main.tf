@@ -1,21 +1,21 @@
-resource "aws_security_group_rule" "this_cidr" {
-  count             = var.source_security_group_id == null ? 1 : 0
+resource "aws_security_group_rule" "this" {
   type              = var.type
   from_port         = var.from_port
   to_port           = var.to_port
   protocol          = var.protocol
-  cidr_blocks       = var.cidr_blocks
   security_group_id = var.security_group_id
-  description       = var.description
-}
+  dynamic "cidr_blocks" {
+    for_each = var.source_security_group_id == null ? [1] : []
+    content {
+      cidr_blocks = var.cidr_blocks
+    }
+  }
 
-resource "aws_security_group_rule" "this_sg" {
-  count                    = var.source_security_group_id != null ? 1 : 0
-  type                     = var.type
-  from_port                = var.from_port
-  to_port                  = var.to_port
-  protocol                 = var.protocol
-  security_group_id        = var.security_group_id
-  source_security_group_id = var.source_security_group_id
-  description              = var.description
+  dynamic "source_security_group_id" {
+    for_each = var.source_security_group_id != null ? [1] : []
+    content {
+      source_security_group_id = var.source_security_group_id
+    }
+  }
+  description = var.description
 }
