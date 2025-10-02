@@ -23,9 +23,9 @@ module "db" {
   engine                 = "mysql"
   engine_version         = "8.0"
   instance_class         = "db.t3.micro"
-  db_name                = "mysqlDB"
+  db_name                = "mysqlDB" # begin with alphabet, only number and alphabet
   username               = "admin"
-  password               = "root"
+  password               = "Root@123" # meets AWS complexity requirements
   subnet_ids             = data.terraform_remote_state.private_subnets.outputs.private_subnet_ids
   vpc_security_group_ids = [data.terraform_remote_state.db_security_group.outputs.mysql_db_sg_id]
 
