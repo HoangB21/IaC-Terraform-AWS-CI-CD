@@ -38,7 +38,6 @@ module "all_egress" {
   to_port           = 0
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
-  ipv6_cidr_blocks  = ["::/0"]
   security_group_id = module.web_sg.security_group_id
   description       = "Allow all outbound traffic"
 }
@@ -55,7 +54,6 @@ module "all_egress" {
 | `to_port`           | `number`       | n/a     | End of the port range.                               |
 | `protocol`          | `string`       | n/a     | Protocol (`tcp`, `udp`, `icmp`, `-1` for all).       |
 | `cidr_blocks`       | `list(string)` | `[]`    | List of IPv4 CIDR blocks.                            |
-| `ipv6_cidr_blocks`  | `list(string)` | `[]`    | List of IPv6 CIDR blocks.                            |
 | `security_group_id` | `string`       | n/a     | The ID of the security group to attach this rule to. |
 | `description`       | `string`       | `null`  | Description of the rule.                             |
 
