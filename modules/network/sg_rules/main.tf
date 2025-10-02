@@ -1,4 +1,4 @@
-resource "aws_security_group_rule" "this_cidr" {
+resource "aws_security_group_rule" "this_use_cidr" {
   count             = var.source_security_group_id == null ? 1 : 0
   type              = var.type
   from_port         = var.from_port
@@ -9,7 +9,7 @@ resource "aws_security_group_rule" "this_cidr" {
   description       = var.description
 }
 
-resource "aws_security_group_rule" "this_sg" {
+resource "aws_security_group_rule" "this_use_sg" {
   count                    = var.source_security_group_id != null ? 1 : 0
   type                     = var.type
   from_port                = var.from_port
