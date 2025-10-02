@@ -23,6 +23,7 @@ module "web_server_sg" {
   source  = "../../../../modules/network/sg"
   vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
   sg_name = "stg-public-sg"
+  tags    = local.common_tags
 }
 
 module "web_server_sg_rule_ssh" {
@@ -86,6 +87,7 @@ module "mysql_db_sg" {
   source  = "../../../../modules/network/sg"
   vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
   sg_name = "stg-mysql-db-sg"
+  tags    = local.common_tags
 }
 
 module "mysql_db_sg_rule_inbound" {
@@ -97,4 +99,24 @@ module "mysql_db_sg_rule_inbound" {
   security_group_id        = module.mysql_db_sg.security_group_id
   source_security_group_id = module.web_server_sg.security_group_id
   description              = "Allow MySQL from app servers"
+}
+
+
+# Security group for Application Load Balancer
+module "alb_sg" {
+  source  = "../../../../modules/network/sg"
+  vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
+  sg_name = "stg-alb-sg"
+  tags    = local.common_tags
+}
+
+module "alb_sg_rule_inbound" {
+  source            = "../../../../modules/network/sg_rules"
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = module.alb_sg.security_group_id
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "Allow HTTP from anywhere"
 }
