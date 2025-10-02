@@ -15,6 +15,7 @@ locals {
   }
 }
 
+
 # Security group for EC2 Web Server
 module "web_server_sg" {
   source  = "../../../../modules/network/sg"
