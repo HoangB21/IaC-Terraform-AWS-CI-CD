@@ -75,3 +75,20 @@ module "web_server_sg_rule_outbound" {
   cidr_blocks       = ["0.0.0.0/0"]
   description       = "Allow all outbound traffic"
 }
+
+module "mysql_db_sg" {
+  source  = "../../../../modules/network/sg"
+  vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
+  sg_name = "stg-mysql-db-sg"
+}
+
+module "mysql_db_sg_rule_inbound" {
+  source                   = "../../../../modules/network/sg_rules"
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  security_group_id        = module.mysql_db_sg.security_group_id
+  source_security_group_id = module.web_server_sg.security_group_id
+  description              = "Allow MySQL from app servers"
+}

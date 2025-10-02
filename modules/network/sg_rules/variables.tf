@@ -35,6 +35,12 @@ variable "security_group_id" {
   type        = string
 }
 
+variable "source_security_group_id" {
+  type        = string
+  default     = null
+  description = "Security Group ID to allow traffic from (used instead of cidr_blocks)."
+}
+
 variable "description" {
   description = "Description of the rule."
   type        = string
