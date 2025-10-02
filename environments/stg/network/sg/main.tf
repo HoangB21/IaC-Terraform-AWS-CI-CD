@@ -15,6 +15,7 @@ locals {
   }
 }
 
+# Security group for EC2 Web Server
 module "web_server_sg" {
   source  = "../../../../modules/network/sg"
   vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
@@ -76,6 +77,8 @@ module "web_server_sg_rule_outbound" {
   description       = "Allow all outbound traffic"
 }
 
+
+# Security group for MySQL Database
 module "mysql_db_sg" {
   source  = "../../../../modules/network/sg"
   vpc_id  = data.terraform_remote_state.vpc.outputs.vpc_id
