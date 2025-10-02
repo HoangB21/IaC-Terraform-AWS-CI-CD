@@ -54,7 +54,7 @@ module "web_server_sg_rule_https" {
   description       = "Allow HTTPs"
 }
 
-module "web_server_sg_rule_http" {
+module "web_server_sg_rule_tcp" {
   source            = "../../../../modules/network/sg_rules"
   security_group_id = module.web_server_sg.security_group_id
   type              = "ingress"
