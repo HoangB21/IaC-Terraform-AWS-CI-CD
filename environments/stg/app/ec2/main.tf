@@ -66,3 +66,34 @@ module "ec2_instance" {
 
   tags = local.common_tags
 }
+
+resource "aws_ami_from_instance" "this" {
+  name                    = "web-server-ami"
+  source_instance_id      = module.ec2_instance.instance_id
+  snapshot_without_reboot = false
+  tags                    = local.common_tags
+}
+
+module "launch_template" {
+  source        = "../../../../modules/app/launch_template"
+  ami_id        = aws_ami_from_instance.this.id
+  instance_type = "t3.micro"
+  name          = "web-server-template"
+  key_name      = "hoang-key-pair"
+
+  user_data = <<-EOT
+    #!/bin/bash
+    apt update
+    apt install -y apache2
+    systemctl start apache2
+    systemctl enable apache2
+
+    apt install mysql-client -y
+
+    echo "Port 8080" | sudo tee -a /etc/ssh/sshd_config
+    sudo systemctl enable ssh
+    sudo systemctl start ssh
+  EOT
+
+  tags = local.common_tags
+}
