@@ -1,3 +1,4 @@
+# Data
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
@@ -7,6 +8,7 @@ data "terraform_remote_state" "vpc" {
   }
 }
 
+# Local variables
 locals {
   common_tags = {
     Created_by  = "Tong Viet Hoang"
