@@ -25,6 +25,15 @@ jobs:
             terraform:
               - 'environments/stg/**'
               - 'environments/prd/**'
+      - name: Comment when no Terraform changes
+        if: steps.filter.outputs.terraform != 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: terraform-plan
+          message: |
+            ## Terraform Plan Result
+            No changes detected in `environments/stg/` or `environments/prd/`.  
+            Skipping Terraform plan.
 
   terraform-ci:
     runs-on: self-hosted # EC2 runner
