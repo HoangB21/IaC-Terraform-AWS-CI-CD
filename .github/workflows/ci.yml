@@ -5,18 +5,31 @@ on:
   pull_request:
     branches:
       - staging
-    paths:
-      - 'environments/stg/**'
-      - 'environments/prd/**'
-      - '!modules/**'
       
 permissions:
   contents: read
   pull-requests: write # allow comment on PR
   
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            terraform:
+              - 'environments/stg/**'
+              - 'environments/prd/**'
+
   terraform-ci:
-    runs-on: self-hosted  # EC2 runner 
+    runs-on: self-hosted # EC2 runner
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,12 +40,11 @@ jobs:
         run: |
           git fetch origin develop
           git fetch origin staging
-      
+
       - name: Find changed directories
         id: changed-dirs
         run: |
           CHANGED_FILES=$(git diff --name-only origin/staging origin/develop)
-      
           echo "Changed files:"
           echo "$CHANGED_FILES"
       
@@ -40,15 +52,7 @@ jobs:
             | grep '^environments/' \
             | xargs -n1 dirname | sort -u || true)
       
-          echo "Changed dirs (multiline):"
-          echo "$CHANGED_DIRS"
-      
-          CHANGED_DIRS_SINGLE_LINE=$(echo $CHANGED_DIRS)
-      
-          echo "Changed dirs (single line):"
-          echo "$CHANGED_DIRS_SINGLE_LINE"
-      
-          echo "dirs=$CHANGED_DIRS_SINGLE_LINE" >> $GITHUB_OUTPUT
+          echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
         id: tf
@@ -64,7 +68,6 @@ jobs:
             terraform show -no-color tfplan > plan.txt
 
             grep -E "^(#|Plan:|Changes to Outputs:|\s+\+|\s+~|\s+-)" plan.txt > plan_short.txt || true
-
             SHORT_PLAN=$(cat plan_short.txt)
             RESULT="$RESULT\n\n### $dir\n\`\`\`\n$SHORT_PLAN\n\`\`\`"
             cd - >/dev/null
