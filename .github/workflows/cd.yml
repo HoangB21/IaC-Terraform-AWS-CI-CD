@@ -34,23 +34,16 @@ jobs:
           filters: |
             stg:
               - 'environments/stg/**'
-            prd:
-              - 'environments/prd/**'
 
       - name: Collect changed directories
         id: collect
         run: |
           CHANGED_DIRS=""
-          for file in ${{ steps.changed.outputs.stg_files }} ${{ steps.changed.outputs.prd_files }}; do
+          for file in ${{ steps.changed.outputs.stg_files }}; do
             DIR=$(dirname "$file")
-            ROOT_DIR=$(echo "$DIR" | cut -d'/' -f1-3)
-
-            if ls "$ROOT_DIR"/*.tf > /dev/null 2>&1; then
-              CHANGED_DIRS="$CHANGED_DIRS $ROOT_DIR"
-            fi
+            CHANGED_DIRS="$CHANGED_DIRS $DIR"
           done
 
-          # Loại bỏ trùng và dòng trống
           CHANGED_DIRS=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sort -u | grep -v '^$')
           echo "Detected Terraform directories:"
           echo "$CHANGED_DIRS"
