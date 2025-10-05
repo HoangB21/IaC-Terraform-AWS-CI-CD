@@ -54,16 +54,12 @@ jobs:
           filters: |
             stg:
               - 'environments/stg/**'
-            prd:
-              - 'environments/prd/**'
-            modules:
-              - 'modules/**'
 
       - name: Collect changed directories
         id: collect
         run: |
           CHANGED_DIRS=""
-          for file in ${{ steps.changed.outputs.stg_files }} ${{ steps.changed.outputs.prd_files }}; do
+          for file in ${{ steps.changed.outputs.stg_files }}; do
             DIR=$(dirname "$file")
             CHANGED_DIRS="$CHANGED_DIRS $(echo "$DIR" | cut -d'/' -f1-3)"
           done
