@@ -63,10 +63,14 @@ jobs:
             DIR=$(dirname "$file")
             CHANGED_DIRS="$CHANGED_DIRS $(echo "$DIR" | cut -d'/' -f1-3)"
           done
+          
           CHANGED_DIRS=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sort -u)
           echo "Detected Terraform directories:"
           echo "$CHANGED_DIRS"
-          echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
+
+          echo "dirs<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_DIRS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
         id: tf
