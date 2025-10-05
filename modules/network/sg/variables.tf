@@ -19,3 +19,29 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "sg_inbound_rules" {
+  description = "A list of inbound rules for the security group."
+  type = list(object({
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    cidr_blocks              = optional(list(string))
+    source_security_group_id = optional(string)
+    description              = optional(string)
+  }))
+  default = []
+}
+
+variable "sg_outbound_rules" {
+  description = "A list of outbound rules for the security group."
+  type = list(object({
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    cidr_blocks              = optional(list(string))
+    source_security_group_id = optional(string)
+    description              = optional(string)
+  }))
+  default = []
+}
