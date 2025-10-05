@@ -76,9 +76,12 @@ jobs:
         id: tf
         run: |
           RESULT=""
-          for dir in ${{ steps.collect.outputs.dirs }}; do
+          echo "${{ steps.collect.outputs.dirs }}" > dirs.txt
+          mapfile -t DIRS < dirs.txt  # đọc từng dòng vào mảng DIRS
+
+          for dir in "${DIRS[@]}"; do
             echo "---- Running in $dir ----"
-            cd $dir
+            cd "$dir"
 
             terraform init -input=false
             terraform fmt -check
