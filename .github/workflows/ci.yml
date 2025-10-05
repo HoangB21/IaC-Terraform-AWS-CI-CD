@@ -12,7 +12,7 @@ permissions:
   
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # EC2 runner
     outputs:
       terraform: ${{ steps.filter.outputs.terraform }}
     steps:
@@ -25,6 +25,7 @@ jobs:
             terraform:
               - 'environments/stg/**'
               - 'environments/prd/**'
+              - 'modules/**'
       - name: Comment when no Terraform changes
         if: steps.filter.outputs.terraform != 'true'
         uses: marocchino/sticky-pull-request-comment@v2
@@ -32,7 +33,7 @@ jobs:
           header: terraform-plan
           message: |
             ## Terraform Plan Result
-            No changes detected in `environments/stg/` or `environments/prd/`.  
+            No changes detected in `environments/stg/`, `environments/prd/` or modules/.  
             Skipping Terraform plan.
 
   terraform-ci:
@@ -45,42 +46,52 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Fetch develop & staging
-        run: |
-          git fetch origin develop
-          git fetch origin staging
+      - name: Detect changed Terraform directories
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: shell
+          filters: |
+            stg:
+              - 'environments/stg/**'
+            prd:
+              - 'environments/prd/**'
+            modules:
+              - 'modules/**'
 
-      - name: Find changed directories
-        id: changed-dirs
+      - name: Collect changed directories
+        id: collect
         run: |
-          CHANGED_FILES=$(git diff --name-only origin/staging origin/develop)
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-      
-          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
-            | grep '^environments/' \
-            | xargs -n1 dirname | sort -u || true)
-      
+          CHANGED_DIRS=""
+          for file in ${{ steps.changed.outputs.stg_files }} ${{ steps.changed.outputs.prd_files }}; do
+            DIR=$(dirname "$file")
+            CHANGED_DIRS="$CHANGED_DIRS $(echo "$DIR" | cut -d'/' -f1-3)"
+          done
+          CHANGED_DIRS=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sort -u)
+          echo "Detected Terraform directories:"
+          echo "$CHANGED_DIRS"
           echo "dirs=$CHANGED_DIRS" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
         id: tf
         run: |
           RESULT=""
-          for dir in ${{ steps.changed-dirs.outputs.dirs }}; do
+          for dir in ${{ steps.collect.outputs.dirs }}; do
             echo "---- Running in $dir ----"
             cd $dir
+
             terraform init -input=false
             terraform fmt -check
             terraform validate
             terraform plan -input=false -no-color -out=tfplan || true
-            terraform show -no-color tfplan > plan.txt
 
-            grep -E "^(#|Plan:|Changes to Outputs:|\s+\+|\s+~|\s+-)" plan.txt > plan_short.txt || true
-            SHORT_PLAN=$(cat plan_short.txt)
-            RESULT="$RESULT\n\n### $dir\n\`\`\`\n$SHORT_PLAN\n\`\`\`"
+            terraform show -no-color tfplan > plan.txt
+            FULL_PLAN=$(cat plan.txt)
+
+            RESULT="$RESULT\n\n### $dir\n\`\`\`\n$FULL_PLAN\n\`\`\`"
             cd - >/dev/null
           done
+
           echo "result<<EOF" >> $GITHUB_OUTPUT
           echo -e "$RESULT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

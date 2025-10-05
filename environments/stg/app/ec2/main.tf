@@ -75,11 +75,12 @@ resource "aws_ami_from_instance" "this" {
 }
 
 module "launch_template" {
-  source        = "../../../../modules/app/launch_template"
-  ami_id        = aws_ami_from_instance.this.id
-  instance_type = "t3.micro"
-  name          = "web-server-template"
-  key_name      = "hoang-key-pair"
+  source             = "../../../../modules/app/launch_template"
+  ami_id             = aws_ami_from_instance.this.id
+  instance_type      = "t3.micro"
+  name               = "web-server-template"
+  key_name           = "hoang-key-pair"
+  security_group_ids = [data.terraform_remote_state.security_groups.outputs.web_server_sg_id]
 
   user_data = <<-EOT
     #!/bin/bash

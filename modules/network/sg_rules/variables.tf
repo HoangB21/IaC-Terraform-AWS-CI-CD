@@ -1,33 +1,13 @@
-variable "type" {
-  description = "Type of rule, ingress or egress."
-  type        = string
-}
-
-variable "from_port" {
-  description = "Start of port range for the rule."
-  type        = number
-}
-
-variable "to_port" {
-  description = "End of port range for the rule."
-  type        = number
-}
-
-variable "protocol" {
-  description = "Protocol (e.g., tcp, udp, icmp, -1 for all)."
-  type        = string
-}
-
-variable "cidr_blocks" {
-  description = "List of IPv4 CIDR blocks."
-  type        = list(string)
-  default     = []
-}
-
-variable "ipv6_cidr_blocks" {
-  description = "List of IPv6 CIDR blocks."
-  type        = list(string)
-  default     = []
+variable "rules" {
+  description = "List of SG rules"
+  type = list(object({
+    from_port                = number
+    to_port                  = number
+    protocol                 = string
+    cidr_blocks              = optional(list(string))
+    source_security_group_id = optional(string)
+    description              = optional(string)
+  }))
 }
 
 variable "security_group_id" {
@@ -35,14 +15,7 @@ variable "security_group_id" {
   type        = string
 }
 
-variable "source_security_group_id" {
+variable "type" {
+  description = "Type of rule, ingress or egress."
   type        = string
-  default     = null
-  description = "Security Group ID to allow traffic from (used instead of cidr_blocks)."
-}
-
-variable "description" {
-  description = "Description of the rule."
-  type        = string
-  default     = null
 }
