@@ -7,8 +7,6 @@ on:
       - staging
     paths:
       - 'environments/stg/**'
-      - 'environments/prd/**'
-      - '!modules/**'
 
 permissions:
   contents: read
@@ -18,37 +16,61 @@ jobs:
   terraform-cd:
     runs-on: self-hosted
 
+    if: github.event.pull_request.merged == true
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Find changed directories
-        id: changed-dirs
+      - name: Detect changed Terraform directories
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: shell
+          filters: |
+            stg:
+              - 'environments/stg/**'
+            prd:
+              - 'environments/prd/**'
+
+      - name: Collect changed directories
+        id: collect
         run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-          CHANGED_DIRS=$(echo "$CHANGED_FILES" \
-            | grep '^environments/' \
-            | xargs -n1 dirname | sort -u || true)
-          echo "Changed dirs (multiline):"
+          CHANGED_DIRS=""
+          for file in ${{ steps.changed.outputs.stg_files }} ${{ steps.changed.outputs.prd_files }}; do
+            DIR=$(dirname "$file")
+            ROOT_DIR=$(echo "$DIR" | cut -d'/' -f1-3)
+
+            if ls "$ROOT_DIR"/*.tf > /dev/null 2>&1; then
+              CHANGED_DIRS="$CHANGED_DIRS $ROOT_DIR"
+            fi
+          done
+
+          # Loại bỏ trùng và dòng trống
+          CHANGED_DIRS=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sort -u | grep -v '^$')
+          echo "Detected Terraform directories:"
           echo "$CHANGED_DIRS"
-          CHANGED_DIRS_SINGLE_LINE=$(echo $CHANGED_DIRS)
-          echo "Changed dirs (single line):"
-          echo "$CHANGED_DIRS_SINGLE_LINE"
-          echo "dirs=$CHANGED_DIRS_SINGLE_LINE" >> $GITHUB_OUTPUT
+
+          echo "dirs<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED_DIRS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Terraform Apply
         id: tf
         run: |
           RESULT=""
-          for dir in ${{ steps.changed-dirs.outputs.dirs }}; do
+          echo "${{ steps.collect.outputs.dirs }}" | grep -v '^$' > dirs.txt
+          mapfile -t DIRS < dirs.txt
+
+          for dir in "${DIRS[@]}"; do
             echo "---- Running in $dir ----"
             cd "$dir"
+
             terraform init -input=false -backend-config="use_lockfile=true"
-            terraform apply -auto-approve -input=false -no-color
+            terraform apply -auto-approve -input=false -no-color || true
+
             OUT=$(terraform output -json || echo "No outputs")
             RESULT="$RESULT\n\n### $dir\n\`\`\`\n$OUT\n\`\`\`"
             cd - >/dev/null
