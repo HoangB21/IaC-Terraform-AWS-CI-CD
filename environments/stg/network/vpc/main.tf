@@ -4,4 +4,9 @@ module "vpc" {
   vpc_name             = "stg-main-vpc"
   enable_dns_hostnames = true
   enable_dns_support   = true
+  tags = {
+    Created_by  = "Tong Viet Hoang"
+    Project     = "STP-2025"
+    Environment = "Staging"
+  }
 }
