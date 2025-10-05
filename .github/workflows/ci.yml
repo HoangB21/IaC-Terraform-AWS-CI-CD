@@ -76,8 +76,8 @@ jobs:
         id: tf
         run: |
           RESULT=""
-          echo "${{ steps.collect.outputs.dirs }}" > dirs.txt
-          mapfile -t DIRS < dirs.txt  # đọc từng dòng vào mảng DIRS
+          echo "${{ steps.collect.outputs.dirs }}" | grep -v '^$' > dirs.txt
+          mapfile -t DIRS < dirs.txt  
 
           for dir in "${DIRS[@]}"; do
             echo "---- Running in $dir ----"
