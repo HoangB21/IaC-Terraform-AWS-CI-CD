@@ -46,9 +46,10 @@ module "alb" {
 
   # Target group
   target_group_name     = "stg-tg"
-  target_group_port     = 80
+  target_group_port     = 8800
   target_group_protocol = "HTTP"
   vpc_id                = data.terraform_remote_state.vpc.outputs.vpc_id
+  health_check_path     = "/api/health"
 
   # Listener
   listener_port     = 80
@@ -59,4 +60,19 @@ module "alb" {
     Environment = "Staging"
     Project     = "STP-2025"
   }
+}
+
+data "terraform_remote_state" "ec2" {
+  backend = "s3"
+  config = {
+    bucket = "hoangtong-tf-state"
+    key    = "stg/app/ec2/terraform.tfstate"
+    region = "ap-southeast-2"
+  }
+}
+
+resource "aws_lb_target_group_attachment" "main_ec2_attachment" {
+  target_group_arn = module.alb.target_group_arn
+  target_id        = data.terraform_remote_state.ec2.outputs.main_be_instance_id
+  port             = 8800
 }

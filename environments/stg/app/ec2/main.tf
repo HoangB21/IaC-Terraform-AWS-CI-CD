@@ -41,9 +41,10 @@ locals {
   }
 }
 
-module "ec2_instance" {
-  source             = "../../../../modules/app/ec2"
-  name               = "stg-main-ec2"
+module "ec2_main_backend" {
+  source = "../../../../modules/app/ec2"
+
+  name               = "stg-be-ec2"
   ami_id             = data.aws_ami.ubuntu.id
   instance_type      = "t3.micro"
   subnet_id          = data.terraform_remote_state.subnets.outputs.public_subnet_ids[0]
@@ -52,49 +53,54 @@ module "ec2_instance" {
 
   user_data = <<-EOT
     #!/bin/bash
+    exec > /var/log/user-data.log 2>&1
+    set -x
     apt update
-    apt install -y apache2
-    systemctl start apache2
-    systemctl enable apache2
+    apt install unzip
 
-    apt install mysql-client -y
-
+    # Change port for ssh
     echo "Port 8080" | sudo tee -a /etc/ssh/sshd_config
     sudo systemctl enable ssh
     sudo systemctl start ssh
-  EOT
 
-  tags = local.common_tags
-}
+    # Install AWS CLI
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
 
-resource "aws_ami_from_instance" "this" {
-  name                    = "web-server-ami"
-  source_instance_id      = module.ec2_instance.instance_id
-  snapshot_without_reboot = false
-  tags                    = local.common_tags
-}
-
-module "launch_template" {
-  source             = "../../../../modules/app/launch_template"
-  ami_id             = aws_ami_from_instance.this.id
-  instance_type      = "t3.micro"
-  name               = "web-server-template"
-  key_name           = "hoang-key-pair"
-  security_group_ids = [data.terraform_remote_state.security_groups.outputs.web_server_sg_id]
-
-  user_data = <<-EOT
-    #!/bin/bash
-    apt update
-    apt install -y apache2
-    systemctl start apache2
-    systemctl enable apache2
-
+    # Install mysql client
     apt install mysql-client -y
 
-    echo "Port 8080" | sudo tee -a /etc/ssh/sshd_config
-    sudo systemctl enable ssh
-    sudo systemctl start ssh
-  EOT
+    # Install Node.js and npm using nvm
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt-get install -y nodejs
 
-  tags = local.common_tags
+    # Install PM2 to run Node.js app
+    npm install pm2 -g
+    cd /home/ubuntu
+
+    # Clone the app repository
+    git clone https://github.com/HoangB21/Social-App-BE
+    cd Social-App-BE
+    npm ci
+
+    # Create .env file
+    echo "DB_HOST=stg-mysql.cpk0wk0uaymd.ap-southeast-2.rds.amazonaws.com" >> .env
+    echo "DB_USER=admin" >> .env
+    echo "DB_PASSWORD=RootAdmin" >> .env
+    echo "DB_NAME=social_app" >> .env
+    echo "DB_PORT=3306" >> .env
+    echo "AWS_REGION=ap-southeast-2" >> .env
+    echo "S3_BUCKET_NAME=socialapp-hoangtong" >> .env
+    echo "ALLOWED_ORIGINS=*" >> .env
+
+    export HOME=/home/ubuntu
+    pm2 start index.js --name "social-app"
+    pm2 startup systemd
+    env PATH=$PATH:/usr/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
+    pm2 save
+    chown -R ubuntu:ubuntu /home/ubuntu/
+
+  EOT
+  tags      = local.common_tags
 }
