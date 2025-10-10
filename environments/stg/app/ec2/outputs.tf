@@ -12,3 +12,8 @@ output "main_be_public_ip" {
   description = "The public IP address of the EC2 instance (if applicable)"
   value       = module.ec2_main_backend.public_ip
 }
+
+output "ec2_ssm_instance_profile_name" {
+  description = "The name of the IAM instance profile for SSM"
+  value       = aws_iam_instance_profile.ec2_ssm_instance_profile.name
+}

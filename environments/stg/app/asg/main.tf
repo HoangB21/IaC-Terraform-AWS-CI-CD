@@ -38,4 +38,5 @@ module "asg" {
   max_size                  = 3
   target_cpu_utilization    = 50
   health_check_grace_period = 300
+  role                      = "backend-ec2"
 }

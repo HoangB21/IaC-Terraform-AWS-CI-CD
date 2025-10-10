@@ -26,6 +26,12 @@ variable "key_name" {
   default     = null
 }
 
+variable "iam_instance_profile" {
+  description = "The name or ARN of the IAM instance profile to associate with the instance."
+  type        = string
+  default     = null
+}
+
 variable "user_data" {
   description = "User data script to configure the instance"
   type        = string

@@ -32,15 +32,6 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-# Local variables
-locals {
-  common_tags = {
-    Created_by  = "Tong Viet Hoang"
-    Project     = "STP-2025"
-    Environment = "Staging"
-  }
-}
-
 module "ec2_main_backend" {
   source = "../../../../modules/app/ec2"
 
@@ -54,6 +45,8 @@ module "ec2_main_backend" {
   user_data = <<-EOT
     #!/bin/bash
     exec > /var/log/user-data.log 2>&1
+    systemctl enable snap.amazon-ssm-agent.amazon-ssm-agent.service
+    systemctl start snap.amazon-ssm-agent.amazon-ssm-agent.service
     set -x
     apt update
     apt install unzip
@@ -102,5 +95,40 @@ module "ec2_main_backend" {
     chown -R ubuntu:ubuntu /home/ubuntu/
 
   EOT
-  tags      = local.common_tags
+
+  iam_instance_profile = aws_iam_instance_profile.ec2_ssm_instance_profile.name
+
+  tags = {
+    Created_by  = "Tong Viet Hoang"
+    Project     = "STP-2025"
+    Environment = "Staging"
+    Role        = "backend-ec2"
+  }
+}
+
+resource "aws_iam_role" "ec2_ssm_role" {
+  name = "EC2SSMRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_managed_core_attach" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
+  name = "EC2SSMInstanceProfile"
+  role = aws_iam_role.ec2_ssm_role.name
 }
