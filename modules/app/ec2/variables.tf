@@ -36,6 +36,12 @@ variable "user_data" {
   default     = null
 }
 
+variable "iam_instance_profile" {
+  description = "The name or ARN of the IAM instance profile to associate with the instance."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Additional tags to apply to the instance"
   type        = map(string)

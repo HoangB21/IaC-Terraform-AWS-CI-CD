@@ -19,6 +19,12 @@ resource "aws_autoscaling_group" "this" {
     value               = var.name
     propagate_at_launch = true
   }
+
+  tag {
+    key                 = "Role"
+    value               = var.role
+    propagate_at_launch = true
+  }
 }
 
 # Target tracking scaling policy (CPU)

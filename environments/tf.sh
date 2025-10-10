@@ -3,12 +3,15 @@ set -e
 
 ACTION=${1:-plan} 
 
+ENV=${2:-stg}
+
 MODULES=( # sort by dependency order
   "network/vpc"
   "network/subnet"
   "network/sg"
-  "app/ec2"
   "db"
+  "app/ec2"
+  "app/launch_template"
   "app/alb"
   "app/asg"
 )
@@ -16,7 +19,7 @@ MODULES=( # sort by dependency order
 # If destroy, then iterate reversely
 if [[ "$ACTION" == "destroy" ]]; then
   for (( idx=${#MODULES[@]}-1 ; idx>=0 ; idx-- )); do
-    module=${MODULES[idx]}
+    module=${ENV}/${MODULES[idx]}
     echo "========== Running terraform $ACTION in $module =========="
     cd "$module"
     terraform init -input=false
@@ -25,6 +28,7 @@ if [[ "$ACTION" == "destroy" ]]; then
   done
 else
   for module in "${MODULES[@]}"; do
+    module=${ENV}/$module
     echo "========== Running terraform $ACTION in $module =========="
     cd "$module"
     terraform init -input=false

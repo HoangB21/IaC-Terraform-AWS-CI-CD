@@ -31,6 +31,12 @@ variable "min_size" {
   default     = 1
 }
 
+variable "role" {
+  description = "Role tag for the instances in the ASG"
+  type        = string
+  default     = "ec2-instance"
+}
+
 variable "target_group_arns" {
   description = "List of Target Group ARNs to associate with the ASG"
   type        = list(string)

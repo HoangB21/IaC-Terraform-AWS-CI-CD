@@ -23,7 +23,7 @@ module "db" {
   engine                 = "mysql"
   engine_version         = "8.0"
   instance_class         = "db.t3.micro"
-  db_name                = "mysqlDB" # begin with alphabet, only number and alphabet
+  db_name                = "social_app" # begin with alphabet, only number and alphabet
   username               = "admin"
   password               = "RootAdmin" # meets AWS complexity requirements
   subnet_ids             = data.terraform_remote_state.private_subnets.outputs.private_subnet_ids
