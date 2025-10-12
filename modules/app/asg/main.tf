@@ -14,6 +14,18 @@ resource "aws_autoscaling_group" "this" {
     version = "$Latest"
   }
 
+  dynamic "instance_refresh" {
+    for_each = var.enable_instance_refresh ? [1] : []
+    content {
+      strategy = var.instance_refresh_strategy
+      preferences {
+        min_healthy_percentage = var.instance_refresh_min_healthy_percentage
+        instance_warmup        = var.instance_refresh_instance_warmup
+      }
+      triggers = var.instance_refresh_triggers
+    }
+  }
+
   tag {
     key                 = "Name"
     value               = var.name

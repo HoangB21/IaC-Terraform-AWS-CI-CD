@@ -38,7 +38,7 @@ module "ec2_main_backend" {
   name               = "stg-be-ec2"
   ami_id             = data.aws_ami.ubuntu.id
   instance_type      = "t3.micro"
-  subnet_id          = data.terraform_remote_state.subnets.outputs.public_subnet_ids[0]
+  subnet_id          = data.terraform_remote_state.subnets.outputs.private_subnet_ids[0]
   security_group_ids = [data.terraform_remote_state.security_groups.outputs.web_server_sg_id]
   key_name           = "hoang-key-pair"
 
@@ -106,29 +106,18 @@ module "ec2_main_backend" {
   }
 }
 
-resource "aws_iam_role" "ec2_ssm_role" {
-  name = "EC2SSMRole"
+# IAM Role and Instance Profile for EC2 to use SSM
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ssm_managed_core_attach" {
-  role       = aws_iam_role.ec2_ssm_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+data "terraform_remote_state" "iam_role" {
+  backend = "s3"
+  config = {
+    bucket = "hoangtong-tf-state"
+    key    = "stg/iam/role/terraform.tfstate"
+    region = "ap-southeast-2"
+  }
 }
 
 resource "aws_iam_instance_profile" "ec2_ssm_instance_profile" {
   name = "EC2SSMInstanceProfile"
-  role = aws_iam_role.ec2_ssm_role.name
+  role = data.terraform_remote_state.iam_role.outputs.role_name
 }

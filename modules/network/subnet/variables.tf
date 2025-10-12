@@ -29,6 +29,12 @@ variable "igw_id" {
   default     = null
 }
 
+variable "nat_gw_id" {
+  description = "The ID of the NAT Gateway"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "A map of tags to assign to resources."
   type        = map(string)

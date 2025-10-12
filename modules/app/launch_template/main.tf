@@ -5,6 +5,7 @@ resource "aws_launch_template" "this" {
   key_name      = var.key_name
 
   vpc_security_group_ids = var.security_group_ids
+  update_default_version = true
 
   iam_instance_profile {
     name = var.iam_instance_profile

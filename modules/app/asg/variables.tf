@@ -31,6 +31,36 @@ variable "min_size" {
   default     = 1
 }
 
+variable "enable_instance_refresh" {
+  description = "Enable instance refresh for the ASG"
+  type        = bool
+  default     = false
+}
+
+variable "instance_refresh_strategy" {
+  description = "Strategy for instance refresh (RollingUpdate or None)"
+  type        = string
+  default     = "Rolling"
+}
+
+variable "instance_refresh_min_healthy_percentage" {
+  description = "Minimum healthy percentage for instance refresh"
+  type        = number
+  default     = 90
+}
+
+variable "instance_refresh_instance_warmup" {
+  description = "Instance warmup time for instance refresh"
+  type        = number
+  default     = 300
+}
+
+variable "instance_refresh_triggers" {
+  description = "Triggers for instance refresh"
+  type        = list(string)
+  default     = ["launch_template"]
+}
+
 variable "role" {
   description = "Role tag for the instances in the ASG"
   type        = string
