@@ -18,7 +18,7 @@ resource "aws_route_table" "this" {
 
   tags = merge(
     {
-      Name = "${var.subnet_name}-rt}"
+      Name = "${var.subnet_name}-rt"
     },
     var.tags
   )
@@ -31,6 +31,14 @@ resource "aws_route" "public_internet_access" {
   route_table_id         = aws_route_table.this.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = var.igw_id
+}
+
+# Route for private subnet (if has nat_gw_id)
+resource "aws_route" "private_nat_gateway_access" {
+  count                  = !var.is_public ? 1 : 0
+  route_table_id         = aws_route_table.this.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = var.nat_gw_id
 }
 
 # Associate subnet with route table

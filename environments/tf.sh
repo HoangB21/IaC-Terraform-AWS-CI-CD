@@ -9,6 +9,7 @@ MODULES=( # sort by dependency order
   "network/vpc"
   "network/subnet"
   "network/sg"
+  "iam/role"
   "db"
   "app/ec2"
   "app/launch_template"

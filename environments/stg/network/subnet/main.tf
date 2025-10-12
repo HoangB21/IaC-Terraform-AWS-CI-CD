@@ -31,6 +31,18 @@ module "public_subnet" {
   tags              = local.common_tags
 }
 
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = module.public_subnet[0].subnet_id
+  tags = {
+    Name = "nat-gateway"
+  }
+}
+
 module "private_subnet" {
   source            = "../../../../modules/network/subnet"
   count             = local.private_subnet_count
@@ -39,6 +51,7 @@ module "private_subnet" {
   cidr_block        = "10.0.${count.index + 128}.0/24"
   availability_zone = local.azs[count.index]
   is_public         = false
-  igw_id            = data.terraform_remote_state.vpc.outputs.igw_id
+  nat_gw_id         = aws_nat_gateway.nat_gw.id
   tags              = local.common_tags
 }
+

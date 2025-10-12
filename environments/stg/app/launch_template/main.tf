@@ -41,6 +41,15 @@ module "launch_template" {
   instance_type        = "t3.micro"
   name                 = "backend-template"
   key_name             = "hoang-key-pair"
+  user_data            = <<-EOT
+    #!/bin/bash
+    exec > /var/log/user-data.log 2>&1
+    echo "Running user data script at $(date). Created by Tong Viet Hoang"
+    echo "Starting EC2 instance bootstrap process..."
+    chown -R ubuntu:ubuntu /home/ubuntu/
+    sudo su - ubuntu -c "cd /home/ubuntu/Social-App-BE && git tag -l | xargs git tag -d && git pull origin main --tags && git checkout $(git describe --tags --abbrev=0) && pm2 restart all"
+
+  EOT
   security_group_ids   = [data.terraform_remote_state.security_groups.outputs.web_server_sg_id]
   iam_instance_profile = data.terraform_remote_state.ec2.outputs.ec2_ssm_instance_profile_name
 
