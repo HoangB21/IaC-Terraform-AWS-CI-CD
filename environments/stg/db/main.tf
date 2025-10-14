@@ -29,6 +29,8 @@ module "db" {
   subnet_ids             = data.terraform_remote_state.private_subnets.outputs.private_subnet_ids
   vpc_security_group_ids = [data.terraform_remote_state.db_security_group.outputs.mysql_db_sg_id]
 
+  create_replica = true # Enable read replica creation
+
   skip_final_snapshot = true
   publicly_accessible = false
 

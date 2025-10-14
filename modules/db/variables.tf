@@ -70,3 +70,9 @@ variable "publicly_accessible" {
   type        = bool
   default     = false
 }
+
+variable "create_replica" {
+  description = "Whether to create a read replica of the primary DB instance."
+  type        = bool
+  default     = false
+}
