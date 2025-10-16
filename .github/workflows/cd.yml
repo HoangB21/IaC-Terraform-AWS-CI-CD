@@ -3,11 +3,6 @@ name: Terraform CD
 on:
   workflow_dispatch:
 
-  pull_request_target:
-    types: [closed]
-    branches:
-      - staging
-
 permissions:
   contents: read
   pull-requests: write
