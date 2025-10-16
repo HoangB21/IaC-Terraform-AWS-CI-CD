@@ -81,7 +81,7 @@ jobs:
         run: |
           ORDERED_DIRS=""
 
-          if [ -f ".modules_order" ]; then
+          if [ -f "environments/.modules_order" ]; then
             echo "Using .modules_order to determine directory order..."
             echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
 
@@ -89,7 +89,7 @@ jobs:
               if grep -qx "environments/stg/$line" changed_dirs.txt; then
                 ORDERED_DIRS="${ORDERED_DIRS}\nenvironments/stg/$line"
               fi
-            done < .modules_order
+            done < environments/.modules_order
 
             echo "Ordered changed dirs:"
             # In từng dòng cho dễ đọc
