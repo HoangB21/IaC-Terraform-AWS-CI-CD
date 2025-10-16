@@ -1,7 +1,0 @@
-
-environments/stg/app/asg
-environments/stg/app/launch_template
-environments/stg/db
-environments/stg/network/sg
-environments/stg/network/subnet
-environments/stg/network/vpc
