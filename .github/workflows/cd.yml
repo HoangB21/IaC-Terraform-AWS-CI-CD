@@ -53,8 +53,8 @@ jobs:
       - name: Sort changed dirs by dependency order
         id: sort
         run: |
-          echo "Sorting changed directories by environments/modules_order.txt..."
-          mapfile -t ORDER < environments/modules_order.txt
+          echo "Sorting changed directories by environments/.modules_order.txt..."
+          mapfile -t ORDER < environments/.modules_order.txt
           echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
 
           SORTED=""
