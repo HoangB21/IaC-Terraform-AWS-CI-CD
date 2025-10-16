@@ -185,33 +185,38 @@ jobs:
           echo "$CHANGED_DIRS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Sort changed dirs by dependency order
-        id: sort
+      - name: Order directories based on .modules_order
+        id: ordered
         run: |
-          echo "Sorting changed directories by environments/.modules_order..."
-          mapfile -t ORDER < environments/.modules_order
-          echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
+          ORDERED_DIRS=""
 
-          SORTED=""
-          for module in "${ORDER[@]}"; do
-            match=$(grep "environments/stg/${module}" changed_dirs.txt || true)
-            if [[ -n "$match" ]]; then
-              SORTED="$SORTED $match"
-            fi
-          done
+          if [ -f "environments/.modules_order" ]; then
+            echo "Using .modules_order to determine directory order..."
+            echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
 
-          echo "Sorted directories:"
-          echo "$SORTED"
+            while IFS= read -r line || [[ -n $line ]]; do
+              if grep -qx "environments/stg/$line" changed_dirs.txt; then
+                ORDERED_DIRS="${ORDERED_DIRS}\nenvironments/stg/$line"
+              fi
+            done < environments/.modules_order
 
-          echo "sorted<<EOF" >> $GITHUB_OUTPUT
-          echo "$SORTED" >> $GITHUB_OUTPUT
+            echo "Ordered changed dirs:"
+
+            echo -e "$ORDERED_DIRS" | sed '/^$/d'
+          else
+            echo "No .modules_order found, using default changed order."
+            ORDERED_DIRS="$(echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n')"
+          fi
+
+          echo "dirs<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$ORDERED_DIRS" | sed '/^$/d' >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Terraform Apply
         id: tf
         run: |
           RESULT=""
-          echo "${{ steps.sort.outputs.sorted }}" | grep -v '^$' > dirs.txt
+          echo "${{ steps.ordered.outputs.dirs }}" | grep -v '^$' > dirs.txt
           mapfile -t DIRS < dirs.txt
 
           for dir in "${DIRS[@]}"; do
