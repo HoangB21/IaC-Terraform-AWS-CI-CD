@@ -13,6 +13,7 @@ locals {
     Created_by  = "Tong Viet Hoang"
     Project     = "STP-2025"
     Environment = "Staging"
+    Demo_date   = "16/10/2025"
   }
   azs                  = ["ap-southeast-2a", "ap-southeast-2b"]
   public_subnet_count  = 2
