@@ -8,6 +8,5 @@ module "vpc" {
     Created_by  = "Tong Viet Hoang"
     Project     = "STP-2025"
     Environment = "Staging"
-    Demo_date   = "10/10/2025"
   }
 }
