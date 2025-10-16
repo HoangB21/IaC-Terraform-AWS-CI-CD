@@ -5,17 +5,7 @@ ACTION=${1:-plan}
 
 ENV=${2:-stg}
 
-MODULES=( # sort by dependency order
-  "network/vpc"
-  "network/subnet"
-  "network/sg"
-  "iam/role"
-  "db"
-  "app/ec2"
-  "app/launch_template"
-  "app/alb"
-  "app/asg"
-)
+mapfile -t MODULES < .modules_order.txt # Read modules from file into an array
 
 # If destroy, then iterate reversely
 if [[ "$ACTION" == "destroy" ]]; then
