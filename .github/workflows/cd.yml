@@ -7,8 +7,6 @@ on:
     types: [closed]
     branches:
       - staging
-    paths:
-      - 'environments/stg/**'
 
 permissions:
   contents: read
