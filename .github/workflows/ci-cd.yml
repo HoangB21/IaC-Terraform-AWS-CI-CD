@@ -142,7 +142,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1440 # 24 hours
     environment:
-      name: production
+      name: staging
     steps:
       - run: echo "Waiting for manual approval..."
 
@@ -151,7 +151,7 @@ jobs:
     timeout-minutes: 60
     needs: [approval, changes]
     if: needs.changes.outputs.terraform == 'true'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
