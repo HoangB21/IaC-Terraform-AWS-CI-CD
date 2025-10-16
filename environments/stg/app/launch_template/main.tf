@@ -23,7 +23,6 @@ locals {
     Created_by  = "Tong Viet Hoang"
     Project     = "STP-2025"
     Environment = "Staging"
-    Demo_date   = "16/10/2025"
   }
 }
 
@@ -39,7 +38,7 @@ resource "aws_ami_from_instance" "this" {
 module "launch_template" {
   source               = "../../../../modules/app/launch_template"
   ami_id               = aws_ami_from_instance.this.id
-  instance_type        = "t3.small"
+  instance_type        = "t3.micro"
   name                 = "backend-template"
   key_name             = "hoang-key-pair"
   user_data            = <<-EOT
