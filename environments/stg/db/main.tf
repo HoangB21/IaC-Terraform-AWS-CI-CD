@@ -39,5 +39,6 @@ module "db" {
     Created_by  = "Tong Viet Hoang"
     Environment = "Staging"
     Project     = "STP-2025"
+    Demo_date   = "16/10/2025"
   }
 }

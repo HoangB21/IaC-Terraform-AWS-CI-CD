@@ -96,9 +96,3 @@ variable "target_cpu_utilization" {
   type        = number
   default     = 50
 }
-
-variable "cooldown" {
-  description = "Cooldown period for scaling actions"
-  type        = number
-  default     = 300
-}

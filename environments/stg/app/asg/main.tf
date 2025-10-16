@@ -34,18 +34,17 @@ module "asg" {
   launch_template_version = data.terraform_remote_state.launch_template.outputs.launch_template_latest_version
   subnet_ids              = data.terraform_remote_state.subnets.outputs.private_subnet_ids
   target_group_arns       = [data.terraform_remote_state.alb.outputs.target_group_arn]
-  desired_capacity        = 6
-  min_size                = 5
-  max_size                = 9
+  desired_capacity        = 3
+  min_size                = 3
+  max_size                = 5
 
   enable_instance_refresh                 = true
   instance_refresh_strategy               = "Rolling"
-  instance_refresh_min_healthy_percentage = 90
-  instance_refresh_instance_warmup        = 300
+  instance_refresh_min_healthy_percentage = 50
+  instance_refresh_instance_warmup        = 180
   instance_refresh_triggers               = ["launch_template"]
 
   target_cpu_utilization    = 50
   health_check_grace_period = 300
-  cooldown                  = 3600
   role                      = "backend-ec2"
 }

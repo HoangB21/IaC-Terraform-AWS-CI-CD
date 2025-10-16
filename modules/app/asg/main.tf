@@ -44,7 +44,6 @@ resource "aws_autoscaling_policy" "cpu_target" {
   name                   = "${var.name}-cpu-scaling"
   policy_type            = "TargetTrackingScaling"
   autoscaling_group_name = aws_autoscaling_group.this.name
-  cooldown               = var.cooldown
 
   target_tracking_configuration {
     predefined_metric_specification {
