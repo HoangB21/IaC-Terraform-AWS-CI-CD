@@ -8,6 +8,12 @@ variable "launch_template_id" {
   type        = string
 }
 
+variable "launch_template_version" {
+  description = "Version of the Launch Template"
+  type        = string
+  default     = "$Latest"
+}
+
 variable "subnet_ids" {
   description = "List of subnet IDs for the ASG"
   type        = list(string)
@@ -89,4 +95,10 @@ variable "target_cpu_utilization" {
   description = "Target average CPU utilization for scaling"
   type        = number
   default     = 50
+}
+
+variable "cooldown" {
+  description = "Cooldown period for scaling actions"
+  type        = number
+  default     = 300
 }

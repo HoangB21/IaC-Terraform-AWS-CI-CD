@@ -76,3 +76,9 @@ variable "create_replica" {
   type        = bool
   default     = false
 }
+
+variable "backup_retention_period" {
+  description = "The days to retain backups for the read replica."
+  type        = number
+  default     = 0
+}
