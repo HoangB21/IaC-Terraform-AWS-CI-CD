@@ -81,25 +81,26 @@ jobs:
         run: |
           ORDERED_DIRS=""
 
-          if [ -f "environments/.modules_order" ]; then
+          if [ -f ".modules_order" ]; then
             echo "Using .modules_order to determine directory order..."
             echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
 
             while IFS= read -r line; do
               if grep -qx "environments/stg/$line" changed_dirs.txt; then
-                ORDERED_DIRS="$ORDERED_DIRS environments/stg/$line"
+                ORDERED_DIRS="${ORDERED_DIRS}\nenvironments/stg/$line"
               fi
-            done < environments/.modules_order
+            done < .modules_order
 
             echo "Ordered changed dirs:"
-            echo "$ORDERED_DIRS"
+            # In từng dòng cho dễ đọc
+            echo -e "$ORDERED_DIRS" | sed '/^$/d'
           else
             echo "No .modules_order found, using default changed order."
-            ORDERED_DIRS="${{ steps.collect.outputs.dirs }}"
+            ORDERED_DIRS="$(echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n')"
           fi
 
           echo "dirs<<EOF" >> $GITHUB_OUTPUT
-          echo "$ORDERED_DIRS" >> $GITHUB_OUTPUT
+          echo -e "$ORDERED_DIRS" | sed '/^$/d' >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Terraform Validate + Plan
