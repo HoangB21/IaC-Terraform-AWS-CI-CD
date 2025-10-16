@@ -83,7 +83,7 @@ jobs:
 
           if [ -f "environments/.modules_order" ]; then
             echo "Using .modules_order to determine directory order..."
-            echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
+            echo "${{ steps.collect.outputs.dirs }}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u > changed_dirs.txt
 
             while IFS= read -r line; do
               if grep -qx "environments/stg/$line" changed_dirs.txt; then
