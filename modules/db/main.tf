@@ -21,10 +21,11 @@ resource "aws_db_instance" "this" {
 }
 
 resource "aws_db_instance" "replica" {
-  count                = var.create_replica ? 1 : 0
-  replicate_source_db  = aws_db_instance.this.arn
-  instance_class       = var.instance_class
-  db_subnet_group_name = aws_db_subnet_group.this.name
-  publicly_accessible  = var.publicly_accessible
-  skip_final_snapshot  = var.skip_final_snapshot
+  count                   = var.create_replica ? 1 : 0
+  replicate_source_db     = aws_db_instance.this.arn
+  instance_class          = var.instance_class
+  db_subnet_group_name    = aws_db_subnet_group.this.name
+  publicly_accessible     = var.publicly_accessible
+  skip_final_snapshot     = var.skip_final_snapshot
+  backup_retention_period = var.backup_retention_period
 }
