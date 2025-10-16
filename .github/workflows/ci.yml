@@ -1,4 +1,3 @@
-# Workflow for CI
 name: Terraform CI
 
 on:
@@ -7,14 +6,14 @@ on:
   pull_request:
     branches:
       - staging
-      
+
 permissions:
   contents: read
-  pull-requests: write # allow comment on PR
-  
+  pull-requests: write
+
 jobs:
   changes:
-    runs-on: self-hosted # EC2 runner
+    runs-on: self-hosted
     outputs:
       terraform: ${{ steps.filter.outputs.terraform }}
     steps:
@@ -26,8 +25,7 @@ jobs:
           filters: |
             terraform:
               - 'environments/stg/**'
-              - 'environments/prd/**'
-              - 'modules/**'
+
       - name: Comment when no Terraform changes
         if: steps.filter.outputs.terraform != 'true'
         uses: marocchino/sticky-pull-request-comment@v2
@@ -35,19 +33,20 @@ jobs:
           header: terraform-plan
           message: |
             ## Terraform Plan Result
-            No changes detected in `environments/stg/`, `environments/prd/` or modules/.  
+            No changes detected in `environments/stg/`.
             Skipping Terraform plan.
 
   terraform-ci:
-    runs-on: self-hosted # EC2 runner
+    runs-on: self-hosted
     needs: changes
     if: needs.changes.outputs.terraform == 'true'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       - name: Detect changed Terraform directories
         id: changed
         uses: dorny/paths-filter@v3
@@ -65,8 +64,8 @@ jobs:
             DIR=$(dirname "$file")
             CHANGED_DIRS="$CHANGED_DIRS $DIR"
           done
-          
-          CHANGED_DIRS=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sort -u)
+
+          CHANGED_DIRS=$(echo "$CHANGED_DIRS" | tr ' ' '\n' | sort -u | grep -v '^$')
           echo "Detected Terraform directories:"
           echo "$CHANGED_DIRS"
 
@@ -74,11 +73,37 @@ jobs:
           echo "$CHANGED_DIRS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: Order directories based on .modules_order
+        id: ordered
+        run: |
+          ORDERED_DIRS=""
+
+          if [ -f "environments/.modules_order" ]; then
+            echo "Using .modules_order to determine directory order..."
+            echo "${{ steps.collect.outputs.dirs }}" | tr ' ' '\n' | sort -u > changed_dirs.txt
+
+            while IFS= read -r line; do
+              if grep -qx "environments/stg/$line" changed_dirs.txt; then
+                ORDERED_DIRS="$ORDERED_DIRS environments/stg/$line"
+              fi
+            done < environments/.modules_order
+
+            echo "Ordered changed dirs:"
+            echo "$ORDERED_DIRS"
+          else
+            echo "No .modules_order found, using default changed order."
+            ORDERED_DIRS="${{ steps.collect.outputs.dirs }}"
+          fi
+
+          echo "dirs<<EOF" >> $GITHUB_OUTPUT
+          echo "$ORDERED_DIRS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Terraform Validate + Plan
         id: tf
         run: |
           RESULT=""
-          echo "${{ steps.collect.outputs.dirs }}" | grep -v '^$' > dirs.txt
+          echo "${{ steps.ordered.outputs.dirs }}" | grep -v '^$' > dirs.txt
           mapfile -t DIRS < dirs.txt  
 
           for dir in "${DIRS[@]}"; do
