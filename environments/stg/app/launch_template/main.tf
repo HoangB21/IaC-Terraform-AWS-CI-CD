@@ -38,7 +38,7 @@ resource "aws_ami_from_instance" "this" {
 module "launch_template" {
   source               = "../../../../modules/app/launch_template"
   ami_id               = aws_ami_from_instance.this.id
-  instance_type        = "t3.micro"
+  instance_type        = "t3.small"
   name                 = "backend-template"
   key_name             = "hoang-key-pair"
   user_data            = <<-EOT
