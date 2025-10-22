@@ -34,7 +34,7 @@ module "asg" {
   launch_template_version = data.terraform_remote_state.launch_template.outputs.launch_template_latest_version
   subnet_ids              = data.terraform_remote_state.subnets.outputs.private_subnet_ids
   target_group_arns       = [data.terraform_remote_state.alb.outputs.target_group_arn]
-  desired_capacity        = 4
+  desired_capacity        = 3
   min_size                = 3
   max_size                = 5
 
