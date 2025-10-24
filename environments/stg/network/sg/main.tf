@@ -44,13 +44,6 @@ module "web_server_sg" {
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
       description = "Allow HTTPs"
-    },
-    {
-      from_port   = 1024
-      to_port     = 65535
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-      description = "Custom TCP port"
     }
   ]
   sg_outbound_rules = [
